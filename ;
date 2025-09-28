@@ -1,0 +1,69 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#define CAPATHITY_PATH "/sys/class/power_supply"
+#define BUFFER_SIZE 256
+
+int get_capacity(const char* battery_name) {
+
+	int capacity = -1;
+
+	char file_path[BUFFER_SIZE];
+	snprintf(file_path, sizeof(file_path), "%s/%s/capacity", CAPATHITY_PATH, battery_name);
+
+	FILE *file = fopen(file_path, "r");
+	if (!file) {
+		return -1;
+	}
+
+	if (fscanf(file, "%d", &capacity) != 1) {
+		fclose(file);
+		return -1;
+	}
+
+	fclose(file);
+
+	return capacity;
+
+}
+
+const char* get_status(const char* battery_name) {
+	
+	char file_path[BUFFER_SIZE];
+	snprintf(file_path, sizeof(file_path), "%s/%s/status", CAPATHITY_PATH, battery_name);
+
+	FILE *file = fopen(file_path, "r");
+	if (!file) {
+		return "N/A";
+	}
+
+	char status_str[32];
+	if (fgets(status_str, sizeof(status_str), file) == NULL) {
+		fclose(file);
+		return "N/A";
+	}
+
+	fclose(file);
+
+	status_str[strcspn(status_str, "\n")] = '\0';
+
+
+	if (strcmp(status_str, "Charging") == 0) {
+		return "󰂄";
+	} else {
+		return "󰁹";
+	}
+
+	return status;
+
+}
+
+int main(int argc, char* argv[]) {
+
+	int capacity = get_capacity(argv[1]);
+	const char* status = get_status(argv[1]);
+
+	printf("%s %d\n", status, capacity);
+	return 0;
+}
